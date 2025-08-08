@@ -1,110 +1,29 @@
+// Debug: Should show a spinning green cube
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xc5d1c5);
+scene.background = new THREE.Color(0x70c5d1);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 4, 10);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 1000);
+camera.position.set(0, 0, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Orbit Controls (classic global)
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 1, 0);
-controls.enablePan = false;
-controls.enableZoom = false;
+const geometry = new THREE.BoxGeometry();
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.8));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-dirLight.position.set(5, 10, 7);
-scene.add(dirLight);
-
-// Ground plane (should always be visible)
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(60, 60),
-  new THREE.MeshStandardMaterial({ color: 0xa5bda5, flatShading: true })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = 0;
-scene.add(ground);
-
-let mixer, model;
-const loader = new THREE.GLTFLoader();
-
-// Debug: Show message while loading
-console.log("Loading GLB model...");
-loader.load(
-  './basic_walk_free_animation_30_frames_loop.glb',
-  function (gltf) {
-    model = gltf.scene;
-    scene.add(model);
-    mixer = new THREE.AnimationMixer(model);
-    if (gltf.animations && gltf.animations.length) {
-      mixer.clipAction(gltf.animations[0]).play();
-    }
-    model.position.set(0, 0, 0);
-    console.log("GLB loaded and added to scene.");
-  },
-  undefined,
-  function (error) {
-    console.error('GLB load error:', error);
-    // Add a visible error marker in the scene
-    const box = new THREE.Mesh(
-      new THREE.BoxGeometry(2, 2, 2),
-      new THREE.MeshStandardMaterial({ color: 0xff2222 })
-    );
-    box.position.y = 1;
-    scene.add(box);
-  }
-);
-
-const keys = { forward: false, back: false, left: false, right: false };
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.forward = true;
-  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.back = true;
-  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
-  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
-});
-window.addEventListener('keyup', (e) => {
-  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.forward = false;
-  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.back = false;
-  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
-  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
-});
-
-const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-  if (mixer) mixer.update(delta);
-
-  if (model) {
-    const dir = new THREE.Vector3(
-      (keys.right ? 1 : 0) - (keys.left ? 1 : 0),
-      0,
-      (keys.back ? 1 : 0) - (keys.forward ? 1 : 0)
-    );
-    if (dir.lengthSq()) {
-      dir.normalize().multiplyScalar(delta * 2);
-      model.position.add(dir);
-      model.rotation.y = Math.atan2(dir.x, dir.z);
-    }
-    const camPos = new THREE.Vector3(
-      model.position.x,
-      model.position.y + 4,
-      model.position.z + 10
-    );
-    camera.position.lerp(camPos, 0.1);
-    controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1, 0)), 0.1);
-    controls.update();
-  }
-
+  cube.rotation.x += 0.02;
+  cube.rotation.y += 0.01;
   renderer.render(scene, camera);
 }
 animate();
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(innerWidth, innerHeight);
 });
