@@ -1,5 +1,3 @@
-// Three.js Character Controller – GitHub Pages compatible
-
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc5d1c5);
 
@@ -10,6 +8,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// Orbit Controls (classic global)
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 1, 0);
 controls.enablePan = false;
@@ -20,18 +19,23 @@ const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
 dirLight.position.set(5, 10, 7);
 scene.add(dirLight);
 
+// Ground plane (should always be visible)
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(60, 60),
-  new THREE.MeshStandardMaterial({ color: 0xc5d1c5, flatShading: true })
+  new THREE.MeshStandardMaterial({ color: 0xa5bda5, flatShading: true })
 );
 ground.rotation.x = -Math.PI / 2;
+ground.position.y = 0;
 scene.add(ground);
 
 let mixer, model;
 const loader = new THREE.GLTFLoader();
+
+// Debug: Show message while loading
+console.log("Loading GLB model...");
 loader.load(
   './basic_walk_free_animation_30_frames_loop.glb',
-  (gltf) => {
+  function (gltf) {
     model = gltf.scene;
     scene.add(model);
     mixer = new THREE.AnimationMixer(model);
@@ -39,10 +43,18 @@ loader.load(
       mixer.clipAction(gltf.animations[0]).play();
     }
     model.position.set(0, 0, 0);
+    console.log("GLB loaded and added to scene.");
   },
   undefined,
-  (error) => {
-    console.error('Error loading GLB:', error);
+  function (error) {
+    console.error('GLB load error:', error);
+    // Add a visible error marker in the scene
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 2, 2),
+      new THREE.MeshStandardMaterial({ color: 0xff2222 })
+    );
+    box.position.y = 1;
+    scene.add(box);
   }
 );
 
@@ -77,7 +89,6 @@ function animate() {
       model.position.add(dir);
       model.rotation.y = Math.atan2(dir.x, dir.z);
     }
-
     const camPos = new THREE.Vector3(
       model.position.x,
       model.position.y + 4,
