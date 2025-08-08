@@ -1,7 +1,9 @@
+// Three.js Character Controller – GitHub Pages compatible
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc5d1c5);
 
-const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 4, 10);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -27,32 +29,42 @@ scene.add(ground);
 
 let mixer, model;
 const loader = new THREE.GLTFLoader();
-loader.load('basic_walk_free_animation_30_frames_loop.glb', gltf => {
-  model = gltf.scene;
-  scene.add(model);
-  mixer = new THREE.AnimationMixer(model);
-  mixer.clipAction(gltf.animations[0]).play();
-});
+loader.load(
+  './basic_walk_free_animation_30_frames_loop.glb',
+  (gltf) => {
+    model = gltf.scene;
+    scene.add(model);
+    mixer = new THREE.AnimationMixer(model);
+    if (gltf.animations && gltf.animations.length) {
+      mixer.clipAction(gltf.animations[0]).play();
+    }
+    model.position.set(0, 0, 0);
+  },
+  undefined,
+  (error) => {
+    console.error('Error loading GLB:', error);
+  }
+);
 
 const keys = { forward: false, back: false, left: false, right: false };
-window.addEventListener('keydown', e => {
-  if (e.code === 'KeyW') keys.forward = true;
-  if (e.code === 'KeyS') keys.back = true;
-  if (e.code === 'KeyA') keys.left = true;
-  if (e.code === 'KeyD') keys.right = true;
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.forward = true;
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.back = true;
+  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
+  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
 });
-window.addEventListener('keyup', e => {
-  if (e.code === 'KeyW') keys.forward = false;
-  if (e.code === 'KeyS') keys.back = false;
-  if (e.code === 'KeyA') keys.left = false;
-  if (e.code === 'KeyD') keys.right = false;
+window.addEventListener('keyup', (e) => {
+  if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.forward = false;
+  if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.back = false;
+  if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
+  if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
 });
 
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
-  mixer?.update(delta);
+  if (mixer) mixer.update(delta);
 
   if (model) {
     const dir = new THREE.Vector3(
@@ -72,7 +84,7 @@ function animate() {
       model.position.z + 10
     );
     camera.position.lerp(camPos, 0.1);
-    controls.target.lerp(model.position.clone().add(new THREE.Vector3(0,1,0)), 0.1);
+    controls.target.lerp(model.position.clone().add(new THREE.Vector3(0, 1, 0)), 0.1);
     controls.update();
   }
 
